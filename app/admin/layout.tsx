@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import ThemeToggle from '@/components/ThemeToggle'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -22,40 +23,45 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     .single()
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#F2F2F2' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg)' }}>
       {/* Top nav */}
-      <header style={{ background: '#0A0A0A' }} className="sticky top-0 z-50 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <svg viewBox="0 0 32 32" fill="none" className="w-7 h-7">
-              <circle cx="16" cy="16" r="14" stroke="#444" strokeWidth="2"/>
-              <circle cx="16" cy="16" r="9" stroke="#555" strokeWidth="1.5"/>
-              <path d="M16 8c-3.3 0-6 2.7-6 6 0 4.5 6 12 6 12s6-7.5 6-12c0-3.3-2.7-6-6-6z" fill="#C41230"/>
-              <circle cx="16" cy="14" r="2.5" fill="white"/>
-            </svg>
-            <span className="text-white font-bold text-sm">{company?.name ?? 'Road Ready'}</span>
-          </div>
+      <header className="sticky top-0 z-50" style={{ background: 'rgba(8,8,8,0.92)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
 
-          <nav className="hidden md:flex items-center gap-1">
+          {/* Brand */}
+          <Link href="/admin" className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'radial-gradient(circle at 50% 50%, #c41230 0 30%, transparent 31%), repeating-conic-gradient(from 0deg, #252525 0 12deg, #0d0d0d 12deg 24deg)', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div className="w-2.5 h-2.5 rounded-full bg-white" style={{ marginTop: '-3px' }} />
+            </div>
+            <div className="min-w-0">
+              <div className="text-white font-black text-sm tracking-tight leading-none">{company?.name ?? 'Onsite Tire Co'}</div>
+              <div className="text-gray-500 text-xs font-semibold tracking-widest uppercase leading-none mt-0.5">Road Ready</div>
+            </div>
+          </Link>
+
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-0.5">
             {[
-              { href: '/admin', label: 'Dashboard' },
-              { href: '/admin/jobs', label: 'Jobs' },
-              { href: '/admin/customers', label: 'Customers' },
-              { href: '/admin/techs', label: 'Team' },
+              { href: '/admin',           label: 'Dashboard'  },
+              { href: '/admin/jobs',      label: 'Jobs'       },
+              { href: '/admin/customers', label: 'Customers'  },
+              { href: '/admin/techs',     label: 'Team'       },
             ].map(({ href, label }) => (
               <Link key={href} href={href}
-                className="px-3 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-white/10 rounded-md transition-colors">
+                className="px-3 py-1.5 text-sm text-gray-400 hover:text-white rounded-md transition-colors"
+                style={{ ':hover': { background: 'rgba(255,255,255,0.08)' } } as React.CSSProperties}>
                 {label}
               </Link>
             ))}
           </nav>
 
-          <div className="flex items-center gap-3">
-            <span className="text-gray-400 text-sm hidden md:block">
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <span className="text-gray-500 text-sm hidden md:block">
               {profile.first_name} {profile.last_name}
             </span>
             <form action="/api/auth/signout" method="POST">
-              <button className="text-gray-500 hover:text-white text-sm transition-colors">
+              <button className="text-gray-500 hover:text-white text-sm transition-colors px-2 py-1 rounded">
                 Sign out
               </button>
             </form>
@@ -64,17 +70,22 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       </header>
 
       {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50"
+        style={{
+          background: 'var(--card)',
+          borderTop: '1px solid var(--border)',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+        }}>
         <div className="flex">
           {[
-            { href: '/admin', label: 'Dashboard', icon: '⊞' },
-            { href: '/admin/jobs', label: 'Jobs', icon: '🔧' },
+            { href: '/admin',           label: 'Dashboard', icon: '⊞' },
+            { href: '/admin/jobs',      label: 'Jobs',      icon: '🔧' },
             { href: '/admin/customers', label: 'Customers', icon: '👤' },
-            { href: '/admin/techs', label: 'Team', icon: '👥' },
+            { href: '/admin/techs',     label: 'Team',      icon: '👥' },
           ].map(({ href, label, icon }) => (
             <Link key={href} href={href}
-              className="flex-1 flex flex-col items-center py-3 text-gray-500 hover:text-red-600 text-xs gap-1 active:bg-gray-50">
+              className="flex-1 flex flex-col items-center py-3 text-xs gap-1 active:opacity-70 transition-opacity"
+              style={{ color: 'var(--text-muted)' }}>
               <span className="text-xl">{icon}</span>
               {label}
             </Link>
