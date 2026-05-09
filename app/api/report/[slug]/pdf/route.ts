@@ -46,242 +46,701 @@ export async function GET(
   const serviceDate = job?.completed_at ? formatDate(String(job.completed_at)) : formatDate(String(report.created_at))
   const location    = [job?.service_city, job?.service_state].filter(Boolean).join(', ')
 
-  const riskColors: Record<string, { bg: string; border: string; text: string }> = {
-    severe:   { bg: '#FEF2F2', border: '#FECACA', text: '#991B1B' },
-    high:     { bg: '#FFF7ED', border: '#FED7AA', text: '#9A3412' },
-    moderate: { bg: '#FEFCE8', border: '#FDE68A', text: '#854D0E' },
-    low:      { bg: '#F0FDF4', border: '#BBF7D0', text: '#166534' },
+  const riskMeta: Record<string, { bg: string; border: string; text: string; label: string }> = {
+    severe:   { bg: '#FEF2F2', border: '#FCA5A5', text: '#991B1B', label: '🔴 Severe' },
+    high:     { bg: '#FFF7ED', border: '#FDBA74', text: '#9A3412', label: '🟠 High' },
+    moderate: { bg: '#FEFCE8', border: '#FDE047', text: '#854D0E', label: '🟡 Moderate' },
+    low:      { bg: '#F0FDF4', border: '#86EFAC', text: '#166534', label: '🟢 Low' },
   }
-  const rc = riskColors[riskSummary?.level ?? 'low'] ?? riskColors.low
+  const rm = riskMeta[riskSummary?.level ?? 'low'] ?? riskMeta.low
 
   const treadBar = (depth: number) => {
     const usable = Math.max(0, Number(depth) - 2)
     const pct    = Math.round((usable / 8) * 100)
     const color  = pct <= 15 ? '#DC2626' : pct <= 30 ? '#F97316' : '#22C55E'
-    return `<div style="display:flex;align-items:center;gap:8px">
-      <div style="flex:1;height:8px;background:#E5E7EB;border-radius:4px;overflow:hidden">
-        <div style="width:${pct}%;height:100%;background:${color};border-radius:4px"></div>
-      </div>
-      <span style="font-size:11px;color:#6B7280;white-space:nowrap">${depth}/32 · ${pct}%</span>
-    </div>`
+    const label  = pct <= 15 ? 'Replace Soon' : pct <= 30 ? 'Worn' : 'Good'
+    return `
+      <div style="display:flex;align-items:center;gap:8px;min-width:140px">
+        <div style="flex:1;height:8px;background:#E5E7EB;border-radius:4px;overflow:hidden;-webkit-print-color-adjust:exact;print-color-adjust:exact">
+          <div style="width:${pct}%;height:100%;background:${color};border-radius:4px;-webkit-print-color-adjust:exact;print-color-adjust:exact"></div>
+        </div>
+        <span style="font-size:10px;color:${color};font-weight:700;white-space:nowrap">${depth}/32&quot; · ${label}</span>
+      </div>`
   }
 
   const html = `<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Road Ready Report — ${vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : 'Your Vehicle'}</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #1A1A1A; background: white; font-size: 13px; line-height: 1.6; }
-  .page { max-width: 780px; margin: 0 auto; padding: 40px; }
-  .section { margin-bottom: 28px; }
-  .section-title { font-size: 14px; font-weight: 700; color: #1A1A1A; padding-bottom: 8px; border-bottom: 2px solid #E5E5E5; margin-bottom: 14px; text-transform: uppercase; letter-spacing: 0.05em; }
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .card { border: 1px solid #E5E5E5; border-radius: 8px; padding: 14px; }
-  .label { color: #6B7280; font-size: 11px; margin-bottom: 2px; }
-  .check-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-  .check-box { width: 15px; height: 15px; background: #22C55E; border-radius: 3px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-  table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  th { text-align: left; padding: 7px 8px; background: #F9FAFB; font-weight: 600; color: #6B7280; font-size: 11px; border-bottom: 1px solid #E5E7EB; }
-  td { padding: 7px 8px; border-bottom: 1px solid #F3F4F6; vertical-align: top; }
-  .badge-pill { display: inline-block; background: #0A0A0A; color: white; padding: 4px 10px; border-radius: 100px; font-size: 11px; font-weight: 600; margin: 2px; }
-  .fact-row { display: flex; gap: 8px; padding: 8px 10px; background: #F9FAFB; border-radius: 6px; margin-bottom: 6px; }
-  .footer { margin-top: 36px; padding-top: 16px; border-top: 2px solid #E5E5E5; display: flex; justify-content: space-between; align-items: center; }
-  @media print { .page { padding: 24px; } body { font-size: 12px; } }
+  * {
+    margin: 0; padding: 0; box-sizing: border-box;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  @page {
+    size: letter;
+    margin: 0.45in 0.5in;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: #111827;
+    background: #F3F4F6;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .page {
+    max-width: 760px;
+    margin: 0 auto;
+    background: #F3F4F6;
+    padding: 28px 24px;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: #0A0A0A;
+    border-radius: 14px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header-accent {
+    position: absolute;
+    top: 0; right: 0;
+    width: 180px; height: 100%;
+    background: linear-gradient(135deg, transparent 40%, rgba(196,18,48,0.15) 100%);
+  }
+  .header-eyebrow {
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    color: #C41230;
+    margin-bottom: 10px;
+  }
+  .header-vehicle {
+    font-size: 26px;
+    font-weight: 900;
+    color: #FFFFFF;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+  .header-meta {
+    font-size: 12px;
+    color: #9CA3AF;
+    margin-bottom: 18px;
+  }
+  .header-pill {
+    display: inline-block;
+    background: #C41230;
+    color: white;
+    padding: 5px 14px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .header-divider {
+    border: none;
+    border-top: 1px solid #1F1F1F;
+    margin: 18px 0;
+  }
+  .header-fields {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+  .header-field-label {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #4B5563;
+    margin-bottom: 3px;
+  }
+  .header-field-value {
+    font-size: 13px;
+    color: #E5E7EB;
+    font-weight: 500;
+  }
+  .header-field-mono {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    color: #D1D5DB;
+  }
+
+  /* ── SECTION ── */
+  .section {
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 14px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+  }
+  .section-header {
+    padding: 12px 18px;
+    background: #F9FAFB;
+    border-bottom: 1px solid #E5E7EB;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-body {
+    padding: 16px 18px;
+  }
+
+  /* ── STAT ROW ── */
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .stat-card {
+    background: white;
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+  }
+  .stat-value {
+    font-size: 22px;
+    font-weight: 900;
+    color: #0A0A0A;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-label {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #9CA3AF;
+  }
+
+  /* ── BADGES ── */
+  .badge-pill {
+    display: inline-block;
+    background: #0A0A0A;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 700;
+    margin: 3px 3px 3px 0;
+    letter-spacing: 0.3px;
+  }
+
+  /* ── RISK BOX ── */
+  .risk-box {
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 0;
+  }
+  .risk-level {
+    font-size: 20px;
+    font-weight: 900;
+    margin-bottom: 8px;
+  }
+  .risk-reason {
+    font-size: 12px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  /* ── TABLE ── */
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    padding: 8px 10px;
+    background: #F9FAFB;
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #6B7280;
+    border-bottom: 1px solid #E5E7EB;
+  }
+  td {
+    padding: 9px 10px;
+    border-bottom: 1px solid #F3F4F6;
+    vertical-align: middle;
+    font-size: 11px;
+  }
+  tr:last-child td { border-bottom: none; }
+
+  /* ── LIFE GRID ── */
+  .life-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .life-card {
+    background: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+
+  /* ── TIME SAVED ── */
+  .time-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .time-col {
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .time-col-label {
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 10px;
+  }
+  .time-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    margin-bottom: 5px;
+  }
+  .time-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 8px;
+    margin-top: 8px;
+  }
+  .time-hero {
+    background: #0A0A0A;
+    color: white;
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .time-hero-num {
+    font-size: 36px;
+    font-weight: 900;
+    color: #C41230;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .time-hero-text {
+    font-size: 13px;
+    color: #9CA3AF;
+    line-height: 1.5;
+  }
+
+  /* ── PREVENTED GRID ── */
+  .prev-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .prev-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #F9FAFB;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #374151;
+  }
+  .prev-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  /* ── CHECKLIST ── */
+  .check-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .check-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: #374151;
+  }
+  .check-dot {
+    width: 16px;
+    height: 16px;
+    background: #DCFCE7;
+    border: 1.5px solid #86EFAC;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    color: #16A34A;
+    font-weight: 900;
+  }
+
+  /* ── FACTS ── */
+  .fact-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 9px 12px;
+    background: #F9FAFB;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    font-size: 11px;
+    color: #374151;
+    line-height: 1.5;
+  }
+  .fact-arrow {
+    color: #C41230;
+    font-weight: 900;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* ── NEXT SERVICE ── */
+  .next-card {
+    background: #FFF1F2;
+    border: 2px solid #FECDD3;
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .next-date {
+    font-size: 22px;
+    font-weight: 900;
+    color: #C41230;
+    flex-shrink: 0;
+  }
+  .next-note {
+    font-size: 11px;
+    color: #6B7280;
+    line-height: 1.5;
+  }
+
+  /* ── WARRANTY ── */
+  .warranty-box {
+    background: #F9FAFB;
+    border-radius: 10px;
+    padding: 14px;
+    font-size: 11px;
+    color: #374151;
+    line-height: 1.9;
+  }
+
+  /* ── FOOTER ── */
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 2px solid #E5E7EB;
+  }
+  .footer-company {
+    font-size: 13px;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 3px;
+  }
+  .footer-meta {
+    font-size: 10px;
+    color: #9CA3AF;
+  }
+  .footer-review {
+    background: #C41230;
+    color: white;
+    padding: 7px 14px;
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 700;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  /* print: auto-trigger */
+  @media print {
+    body { background: #F3F4F6; }
+    .no-print { display: none !important; }
+  }
 </style>
+<script>window.onload = () => setTimeout(() => window.print(), 400)</script>
 </head>
 <body>
 <div class="page">
 
-  <!-- ── HEADER ── -->
-  <div style="background:#0A0A0A;color:white;padding:28px 32px;border-radius:10px;margin-bottom:28px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px">
-      <div>
-        <div style="color:#C41230;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:3px;margin-bottom:10px">Road Ready Report</div>
-        <div style="font-size:24px;font-weight:800;margin-bottom:4px">${vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : 'Your Vehicle'}</div>
-        <div style="color:#9CA3AF;font-size:13px">${serviceDate}${location ? ` · ${location}` : ''}${tech ? ` · ${tech.first_name} ${tech.last_name}` : ''}</div>
-        <div style="color:#6B7280;font-size:12px;margin-top:2px">${SERVICE_TYPE_LABEL[String(job?.service_type) as keyof typeof SERVICE_TYPE_LABEL] ?? 'Tire Service'}${job?.tire_count ? ` · ${job.tire_count} tires` : ''}</div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="background:#C41230;color:white;padding:6px 14px;border-radius:100px;font-size:12px;font-weight:700;margin-bottom:8px">Road Ready ✓</div>
-        ${timeSaved ? `<div style="color:#9CA3AF;font-size:11px">${Math.floor(timeSaved / 60)}h ${timeSaved % 60}m saved</div>` : ''}
-      </div>
+  <!-- ═══════════════════════════════ HEADER ═══════════════════════════════ -->
+  <div class="header">
+    <div class="header-accent"></div>
+    <div class="header-eyebrow">Road Ready — Mobile Tire Service Report</div>
+    <div class="header-vehicle">${vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : 'Vehicle Service Report'}</div>
+    <div class="header-meta">
+      ${serviceDate}${location ? ` &nbsp;·&nbsp; ${location}` : ''}${tech ? ` &nbsp;·&nbsp; Tech: ${tech.first_name} ${tech.last_name}` : ''}
+      &nbsp;·&nbsp; ${SERVICE_TYPE_LABEL[String(job?.service_type) as keyof typeof SERVICE_TYPE_LABEL] ?? 'Tire Service'}${job?.tire_count ? `, ${job.tire_count} tires` : ''}
     </div>
-    ${cust || vehicle?.vin ? `
-    <div style="margin-top:18px;padding-top:14px;border-top:1px solid #2D2D2D;display:flex;gap:32px">
-      ${cust ? `<div><div style="color:#6B7280;font-size:10px;text-transform:uppercase;letter-spacing:1px">Customer</div><div style="color:white;font-size:13px;margin-top:2px">${cust.first_name} ${cust.last_name}${cust.phone ? ` · ${cust.phone}` : ''}</div></div>` : ''}
-      ${vehicle?.license_plate ? `<div><div style="color:#6B7280;font-size:10px;text-transform:uppercase;letter-spacing:1px">License Plate</div><div style="color:white;font-family:monospace;font-size:13px;margin-top:2px">${vehicle.license_plate}</div></div>` : ''}
-      ${vehicle?.vin ? `<div><div style="color:#6B7280;font-size:10px;text-transform:uppercase;letter-spacing:1px">VIN</div><div style="color:#D1D5DB;font-family:monospace;font-size:12px;margin-top:2px">${vehicle.vin}</div></div>` : ''}
+    <div class="header-pill">Road Ready ✓</div>
+    ${timeSaved ? `<span style="display:inline-block;margin-left:10px;background:#1A1A1A;color:#9CA3AF;padding:5px 12px;border-radius:100px;font-size:11px;font-weight:600;">${Math.floor(timeSaved / 60)}h ${timeSaved % 60 > 0 ? `${timeSaved % 60}m` : ''} saved vs. tire shop</span>` : ''}
+
+    ${cust || vehicle?.vin || vehicle?.license_plate ? `<hr class="header-divider">
+    <div class="header-fields">
+      ${cust ? `<div>
+        <div class="header-field-label">Customer</div>
+        <div class="header-field-value">${cust.first_name} ${cust.last_name}${cust.phone ? `<span style="color:#4B5563"> &nbsp;·&nbsp; ${cust.phone}</span>` : ''}</div>
+      </div>` : ''}
+      ${vehicle?.license_plate ? `<div>
+        <div class="header-field-label">License Plate</div>
+        <div class="header-field-mono">${vehicle.license_plate}</div>
+      </div>` : ''}
+      ${vehicle?.vin ? `<div>
+        <div class="header-field-label">VIN</div>
+        <div class="header-field-mono" style="font-size:11px">${vehicle.vin}</div>
+      </div>` : ''}
     </div>` : ''}
   </div>
 
-  <!-- ── GOOD CALL BADGES ── -->
-  ${badges.length ? `<div class="section">
-    <div class="section-title">Good Call Getting This Done</div>
-    <p style="color:#4B5563;font-size:12px;margin-bottom:10px">Your old tires were showing signs of wear that affect safety, reliability, and control.</p>
-    <div>${badges.map(b => `<span class="badge-pill">✓ ${b}</span>`).join('')}</div>
-  </div>` : ''}
+  <!-- ═══════════════════════════════ QUICK STATS ═══════════════════════════ -->
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="stat-value">${tires.length || job?.tire_count || '—'}</div>
+      <div class="stat-label">Tires Serviced</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" style="color:${riskMeta[riskSummary?.level ?? 'low']?.text ?? '#166534'}">${(riskSummary?.level ?? 'Low').charAt(0).toUpperCase() + (riskSummary?.level ?? 'low').slice(1)}</div>
+      <div class="stat-label">Risk Level</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" style="color:#22C55E">${checks.filter(c => c.completed).length}</div>
+      <div class="stat-label">Checks Passed</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" style="color:#C41230">${timeSaved ? `${Math.floor(timeSaved / 60)}h${timeSaved % 60 > 0 ? `${timeSaved % 60}m` : ''}` : '—'}</div>
+      <div class="stat-label">Time Saved</div>
+    </div>
+  </div>
 
-  <!-- ── RISK SUMMARY ── -->
-  ${riskSummary ? `<div class="section">
-    <div class="section-title">Tire Condition Summary</div>
-    <div style="background:${rc.bg};border:1px solid ${rc.border};border-radius:8px;padding:14px;margin-bottom:12px">
-      <div style="font-weight:800;font-size:18px;color:${rc.text};margin-bottom:8px">${RISK_LABEL[riskSummary.level as keyof typeof RISK_LABEL]} Risk Level</div>
-      ${riskSummary.reasons.map(r => `<div style="font-size:12px;color:${rc.text};margin-bottom:4px">› ${r}</div>`).join('')}
+  <!-- ═══════════════════════════════ GOOD CALL ════════════════════════════ -->
+  ${badges.length ? `<div class="section">
+    <div class="section-header">✦ &nbsp;Good Call Getting This Done</div>
+    <div class="section-body">
+      <p style="color:#4B5563;font-size:11px;margin-bottom:10px">Your old tires were showing signs of wear that affect safety, reliability, and control — you made the right call.</p>
+      <div>${badges.map(b => `<span class="badge-pill">✓ ${b}</span>`).join('')}</div>
     </div>
   </div>` : ''}
 
-  <!-- ── TIRE RECORDS ── -->
+  <!-- ═══════════════════════════════ RISK SUMMARY ══════════════════════════ -->
+  ${riskSummary ? `<div class="section">
+    <div class="section-header">⚠ &nbsp;Tire Condition Summary</div>
+    <div class="section-body">
+      <div class="risk-box" style="background:${rm.bg};border:1.5px solid ${rm.border}">
+        <div class="risk-level" style="color:${rm.text}">${rm.label} Risk Level</div>
+        ${riskSummary.reasons.map(r => `<div class="risk-reason" style="color:${rm.text}"><span>›</span><span>${r}</span></div>`).join('')}
+      </div>
+    </div>
+  </div>` : ''}
+
+  <!-- ═══════════════════════════════ TIRE RECORDS ══════════════════════════ -->
   ${tires.length ? `<div class="section">
-    <div class="section-title">Tire Records</div>
+    <div class="section-header">◉ &nbsp;Tire Records</div>
     <table>
       <thead><tr>
-        <th>Position</th><th>Old Tire</th><th>Tread Depth</th><th>Issues</th><th>New Tire</th><th>PSI</th><th>Verified</th>
+        <th style="width:80px">Position</th>
+        <th>Old Tire</th>
+        <th style="width:160px">Tread at Service</th>
+        <th>Issues Found</th>
+        <th>New Tire</th>
+        <th style="width:50px">PSI</th>
+        <th style="width:80px">Verified</th>
       </tr></thead>
       <tbody>
-        ${tires.map(t => `<tr>
-          <td><strong>${TIRE_POSITION_LABEL[String(t.position) as keyof typeof TIRE_POSITION_LABEL] ?? String(t.position)}</strong></td>
-          <td style="color:#374151">${[t.old_brand, t.old_model].filter(Boolean).join(' ') || '—'}<br><span style="color:#9CA3AF;font-size:11px">${t.old_size ?? ''}</span></td>
+        ${tires.map((t, i) => `<tr style="${i % 2 === 1 ? 'background:#FAFAFA' : ''}">
+          <td><strong style="color:#111827">${TIRE_POSITION_LABEL[String(t.position) as keyof typeof TIRE_POSITION_LABEL] ?? String(t.position)}</strong></td>
           <td>
-            ${t.old_tread_depth != null ? treadBar(Number(t.old_tread_depth)) : '—'}
+            <div style="font-weight:600;color:#111827">${[t.old_brand, t.old_model].filter(Boolean).join(' ') || '—'}</div>
+            ${t.old_size ? `<div style="color:#9CA3AF;font-size:10px;margin-top:1px">${t.old_size}</div>` : ''}
+            ${t.old_dot ? `<div style="color:#9CA3AF;font-size:10px">DOT ${t.old_dot}</div>` : ''}
           </td>
-          <td style="color:#EF4444;font-size:11px">${Array.isArray(t.old_issues) && (t.old_issues as string[]).length ? (t.old_issues as string[]).map(i => i.replace(/_/g,' ')).join(', ') : '—'}</td>
-          <td style="color:#374151">${[t.new_brand, t.new_model].filter(Boolean).join(' ') || '—'}<br><span style="color:#9CA3AF;font-size:11px">${t.new_size ?? ''}</span></td>
-          <td>${t.psi_after ? `<strong>${t.psi_after}</strong> psi` : '—'}</td>
-          <td style="font-size:11px;color:#22C55E">
-            ${t.torque_checked ? '✓ Torque<br>' : ''}${t.tpms_checked ? '✓ TPMS<br>' : ''}${t.valve_stem_replaced ? '✓ Valve<br>' : ''}${t.wheel_inspected ? '✓ Wheel' : ''}
+          <td>${t.old_tread_depth != null ? treadBar(Number(t.old_tread_depth)) : '<span style="color:#9CA3AF">—</span>'}</td>
+          <td style="color:#EF4444;font-size:10px">${Array.isArray(t.old_issues) && (t.old_issues as string[]).length ? (t.old_issues as string[]).map((i: string) => `<span style="display:inline-block;background:#FEF2F2;border:1px solid #FECACA;color:#DC2626;padding:1px 6px;border-radius:4px;margin:1px;font-size:10px">${i.replace(/_/g,' ')}</span>`).join('') : '<span style="color:#9CA3AF">None</span>'}</td>
+          <td>
+            <div style="font-weight:600;color:#111827">${[t.new_brand, t.new_model].filter(Boolean).join(' ') || '—'}</div>
+            ${t.new_size ? `<div style="color:#9CA3AF;font-size:10px;margin-top:1px">${t.new_size}</div>` : ''}
+            ${t.new_dot ? `<div style="color:#9CA3AF;font-size:10px">DOT ${t.new_dot}</div>` : ''}
+          </td>
+          <td>${t.psi_after != null ? `<strong style="color:#111827">${t.psi_after}</strong><span style="color:#9CA3AF;font-size:10px"> psi</span>` : '<span style="color:#9CA3AF">—</span>'}</td>
+          <td style="font-size:10px;line-height:1.7">
+            ${t.torque_checked ? '<span style="color:#22C55E;font-weight:700">✓</span> <span style="color:#374151">Torque</span><br>' : ''}
+            ${t.tpms_checked ? '<span style="color:#22C55E;font-weight:700">✓</span> <span style="color:#374151">TPMS</span><br>' : ''}
+            ${t.valve_stem_replaced ? '<span style="color:#22C55E;font-weight:700">✓</span> <span style="color:#374151">Valve</span><br>' : ''}
+            ${t.wheel_inspected ? '<span style="color:#22C55E;font-weight:700">✓</span> <span style="color:#374151">Wheel</span>' : ''}
           </td>
         </tr>`).join('')}
       </tbody>
     </table>
   </div>` : ''}
 
-  <!-- ── ESTIMATED LIFE LEFT ── -->
+  <!-- ═══════════════════════════════ LIFE LEFT ═════════════════════════════ -->
   ${tires.some(t => t.old_tread_depth != null) ? `<div class="section">
-    <div class="section-title">Estimated Tire Life at Service</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      ${tires.filter(t => t.old_tread_depth != null).map(t => {
-        const depth  = Number(t.old_tread_depth)
-        const usable = Math.max(0, depth - 2)
-        const pct    = Math.round((usable / 8) * 100)
-        const color  = pct <= 15 ? '#DC2626' : pct <= 30 ? '#F97316' : '#22C55E'
-        return `<div class="card">
-          <div style="font-weight:600;font-size:12px;margin-bottom:6px">${TIRE_POSITION_LABEL[String(t.position) as keyof typeof TIRE_POSITION_LABEL] ?? String(t.position)}</div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-            <div style="flex:1;height:10px;background:#E5E7EB;border-radius:5px;overflow:hidden">
-              <div style="width:${pct}%;height:100%;background:${color};border-radius:5px"></div>
+    <div class="section-header">📊 &nbsp;Estimated Tread Life at Service</div>
+    <div class="section-body">
+      <div class="life-grid">
+        ${tires.filter(t => t.old_tread_depth != null).map(t => {
+          const depth  = Number(t.old_tread_depth)
+          const usable = Math.max(0, depth - 2)
+          const pct    = Math.round((usable / 8) * 100)
+          const color  = pct <= 15 ? '#DC2626' : pct <= 30 ? '#F97316' : '#22C55E'
+          const bg     = pct <= 15 ? '#FEF2F2' : pct <= 30 ? '#FFF7ED' : '#F0FDF4'
+          const border = pct <= 15 ? '#FECACA' : pct <= 30 ? '#FDBA74' : '#86EFAC'
+          return `<div class="life-card" style="background:${bg};border-color:${border}">
+            <div style="font-weight:700;font-size:11px;color:#111827;margin-bottom:6px">${TIRE_POSITION_LABEL[String(t.position) as keyof typeof TIRE_POSITION_LABEL] ?? String(t.position)}</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+              <div style="flex:1;height:10px;background:rgba(0,0,0,0.08);border-radius:5px;overflow:hidden">
+                <div style="width:${pct}%;height:100%;background:${color};border-radius:5px"></div>
+              </div>
+              <span style="font-size:13px;font-weight:900;color:${color}">${pct}%</span>
             </div>
-            <span style="font-size:12px;font-weight:700;color:${color}">${pct}%</span>
-          </div>
-          <div style="font-size:11px;color:#6B7280">${depth}/32" · ${t.estimated_life_left_text ?? ''}</div>
-        </div>`
-      }).join('')}
+            <div style="font-size:10px;color:#6B7280">${depth}/32&quot; remaining ${t.estimated_life_left_text ? `· ${t.estimated_life_left_text}` : ''}</div>
+          </div>`
+        }).join('')}
+      </div>
+      <p style="margin-top:10px;font-size:10px;color:#9CA3AF">Estimate based on tread depth at time of service. Actual life varies with driving conditions and style.</p>
     </div>
-    <p style="margin-top:10px;font-size:11px;color:#9CA3AF">Estimate based on tread depth at time of service. Actual life varies with driving conditions.</p>
   </div>` : ''}
 
-  <!-- ── TIME SAVED ── -->
+  <!-- ═══════════════════════════════ TIME SAVED ════════════════════════════ -->
   ${timeSaved ? `<div class="section">
-    <div class="section-title">Time Saved vs. a Tire Shop</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-      <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:14px">
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#EF4444;letter-spacing:1px;margin-bottom:10px">Traditional Shop Visit</div>
-        ${[
-          ['Drive there', '~25 min'],
-          ['Check-in', '~15 min'],
-          ['Wait for service', '~75 min'],
-          ['Drive back', '~25 min'],
-        ].map(([s, t]) => `<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px"><span style="color:#7F1D1D">${s}</span><span style="color:#DC2626;font-weight:600">${t}</span></div>`).join('')}
-        <div style="border-top:1px solid #FECACA;margin-top:8px;padding-top:8px;display:flex;justify-content:space-between">
-          <span style="font-weight:700;color:#7F1D1D">Total</span>
-          <span style="font-weight:800;color:#DC2626;font-size:14px">~2.3 hrs</span>
+    <div class="section-header">⏱ &nbsp;Time Saved vs. a Traditional Tire Shop</div>
+    <div class="section-body">
+      <div class="time-grid">
+        <div class="time-col" style="background:#FEF2F2;border:1.5px solid #FECACA">
+          <div class="time-col-label" style="color:#DC2626">Traditional Tire Shop</div>
+          ${[
+            ['Drive to shop', '~25 min'],
+            ['Wait at counter', '~15 min'],
+            ['Service wait time', '~75 min'],
+            ['Drive back home', '~25 min'],
+          ].map(([step, time]) => `<div class="time-row"><span style="color:#7F1D1D">${step}</span><span style="color:#DC2626;font-weight:700">${time}</span></div>`).join('')}
+          <div class="time-total-row" style="border-top:1px solid #FECACA">
+            <span style="font-weight:800;color:#7F1D1D">Total wasted</span>
+            <span style="font-size:16px;font-weight:900;color:#DC2626">~2.3 hrs</span>
+          </div>
+        </div>
+        <div class="time-col" style="background:#F0FDF4;border:1.5px solid #86EFAC">
+          <div class="time-col-label" style="color:#16A34A">Road Ready Mobile</div>
+          ${[
+            ['Drive to shop', 'None ✓'],
+            ['Wait at counter', 'None ✓'],
+            ['Service wait time', 'Done at home ✓'],
+            ['Drive back home', 'None ✓'],
+          ].map(([step, val]) => `<div class="time-row"><span style="color:#166534">${step}</span><span style="color:#16A34A;font-weight:700">${val}</span></div>`).join('')}
+          <div class="time-total-row" style="border-top:1px solid #86EFAC">
+            <span style="font-weight:800;color:#166534">Total wasted</span>
+            <span style="font-size:14px;font-weight:900;color:#16A34A">0 minutes</span>
+          </div>
         </div>
       </div>
-      <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:14px">
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#16A34A;letter-spacing:1px;margin-bottom:10px">Road Ready Mobile</div>
-        ${[
-          ['Drive there', 'None ✓'],
-          ['Check-in', 'None ✓'],
-          ['Wait for service', 'At home ✓'],
-          ['Drive back', 'None ✓'],
-        ].map(([s, t]) => `<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px"><span style="color:#166534">${s}</span><span style="color:#16A34A;font-weight:600">${t}</span></div>`).join('')}
-        <div style="border-top:1px solid #BBF7D0;margin-top:8px;padding-top:8px;display:flex;justify-content:space-between">
-          <span style="font-weight:700;color:#166534">Total</span>
-          <span style="font-weight:800;color:#16A34A;font-size:14px">Done at your door</span>
-        </div>
+      <div class="time-hero">
+        <div class="time-hero-num">${Math.floor(timeSaved / 60)}h${timeSaved % 60 > 0 ? `&nbsp;${timeSaved % 60}m` : ''}</div>
+        <div class="time-hero-text">of your day back — for free.<br>No drive. No waiting room. No wasted afternoon.</div>
       </div>
-    </div>
-    <div style="background:#0A0A0A;color:white;border-radius:8px;padding:14px;text-align:center">
-      <span style="font-size:28px;font-weight:800">${Math.floor(timeSaved / 60)}h ${timeSaved % 60 > 0 ? `${timeSaved % 60}m` : ''}</span>
-      <span style="color:#9CA3AF;font-size:13px;margin-left:8px">of your day saved — No drive. No waiting room. No wasted afternoon.</span>
     </div>
   </div>` : ''}
 
-  <!-- ── WHAT BAD TIRES CAUSE ── -->
+  <!-- ═══════════════════════════════ PREVENTED ═════════════════════════════ -->
   <div class="section">
-    <div class="section-title">What This Service Prevented</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      ${[
-        ['Longer stopping distances', '🛑'],
-        ['Poor traction in rain', '🌧️'],
-        ['Higher hydroplaning risk', '💧'],
-        ['Blowouts at highway speed', '💥'],
-        ['Loss of control when braking', '⚠️'],
-        ['Getting stranded roadside', '🚨'],
-      ].map(([text, icon]) => `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#F9FAFB;border-radius:6px;font-size:12px"><span>${icon}</span><span style="color:#374151">${text}</span></div>`).join('')}
+    <div class="section-header">🛡 &nbsp;What This Service Helped Prevent</div>
+    <div class="section-body">
+      <div class="prev-grid">
+        ${[
+          ['🛑', 'Longer stopping distances'],
+          ['🌧️', 'Poor traction in wet conditions'],
+          ['💧', 'Hydroplaning risk at highway speed'],
+          ['💥', 'Sudden blowout while driving'],
+          ['⚠️', 'Loss of control when braking'],
+          ['🚨', 'Getting stranded on the roadside'],
+        ].map(([icon, text]) => `<div class="prev-item"><span class="prev-icon">${icon}</span><span>${text}</span></div>`).join('')}
+      </div>
     </div>
   </div>
 
-  <!-- ── SERVICE CHECKLIST ── -->
+  <!-- ═══════════════════════════════ CHECKLIST ═════════════════════════════ -->
   ${checks.filter(c => c.completed).length ? `<div class="section">
-    <div class="section-title">Service Checklist</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
-      ${checks.filter(c => c.completed).map(c => `
-        <div class="check-row">
-          <div class="check-box"><span style="color:white;font-size:9px;font-weight:bold">✓</span></div>
-          <span style="font-size:12px">${String(c.label)}</span>
-        </div>`).join('')}
+    <div class="section-header">✓ &nbsp;Service Checklist Completed</div>
+    <div class="section-body">
+      <div class="check-grid">
+        ${checks.filter(c => c.completed).map(c => `
+          <div class="check-item">
+            <div class="check-dot">✓</div>
+            <span>${String(c.label)}</span>
+          </div>`).join('')}
+      </div>
     </div>
   </div>` : ''}
 
-  <!-- ── TIRE FACTS ── -->
+  <!-- ═══════════════════════════════ TIRE FACTS ════════════════════════════ -->
   ${facts.length ? `<div class="section">
-    <div class="section-title">A Few Things Worth Knowing</div>
-    ${facts.map(f => `<div class="fact-row"><span style="color:#C41230;font-weight:700;flex-shrink:0">→</span><span style="color:#374151;font-size:12px">${f}</span></div>`).join('')}
-  </div>` : ''}
-
-  <!-- ── NEXT SERVICE ── -->
-  ${nextDate ? `<div class="section">
-    <div class="section-title">Next Recommended Service</div>
-    <div class="card" style="border-color:#C41230;border-width:2px">
-      <div style="font-size:18px;font-weight:800;color:#C41230;margin-bottom:4px">${nextDate}</div>
-      <div style="font-size:12px;color:#6B7280">${nextNotes ?? 'Rotation and inspection recommended within 5–6 months.'}</div>
+    <div class="section-header">💡 &nbsp;A Few Things Worth Knowing</div>
+    <div class="section-body">
+      ${facts.map(f => `<div class="fact-row"><span class="fact-arrow">→</span><span>${f}</span></div>`).join('')}
     </div>
   </div>` : ''}
 
-  <!-- ── WARRANTY ── -->
+  <!-- ═══════════════════════════════ NEXT SERVICE ══════════════════════════ -->
+  ${nextDate ? `<div class="section">
+    <div class="section-header">📅 &nbsp;Next Recommended Service</div>
+    <div class="section-body">
+      <div class="next-card">
+        <div class="next-date">${nextDate}</div>
+        <div class="next-note">${nextNotes ?? 'Rotation and inspection recommended within 5–6 months. Keeping up with regular service extends tire life and maintains safety.'}</div>
+      </div>
+    </div>
+  </div>` : ''}
+
+  <!-- ═══════════════════════════════ WARRANTY ══════════════════════════════ -->
   <div class="section">
-    <div class="section-title">Warranty & Service Record</div>
-    <div style="background:#F9FAFB;border-radius:8px;padding:14px;font-size:12px;color:#374151;line-height:1.8">
-      <strong>Workmanship Warranty:</strong> 90 days from date of service.<br>
-      <strong>Service Date:</strong> ${serviceDate}<br>
-      <strong>Technician:</strong> ${tech ? `${tech.first_name} ${tech.last_name}` : 'Road Ready Technician'}<br>
-      <strong>Service Provider:</strong> ${company?.name ?? 'Road Ready Platform'}${company?.phone ? ` · ${company.phone}` : ''}<br>
-      Keep this report as your service record. You may need it to support a warranty claim.
+    <div class="section-header">📋 &nbsp;Warranty &amp; Service Record</div>
+    <div class="section-body">
+      <div class="warranty-box">
+        <strong>Workmanship Warranty:</strong> 90 days from date of service<br>
+        <strong>Service Date:</strong> ${serviceDate}<br>
+        <strong>Technician:</strong> ${tech ? `${tech.first_name} ${tech.last_name}` : 'Road Ready Technician'}<br>
+        <strong>Service Provider:</strong> ${company?.name ?? 'Road Ready Platform'}${company?.phone ? ` &nbsp;·&nbsp; ${company.phone}` : ''}${company?.email ? ` &nbsp;·&nbsp; ${company.email}` : ''}<br>
+        <span style="color:#9CA3AF">Keep this report as your official service record. You may need it to support a tire or workmanship warranty claim.</span>
+      </div>
     </div>
   </div>
 
-  <!-- ── FOOTER ── -->
+  <!-- ═══════════════════════════════ FOOTER ════════════════════════════════ -->
   <div class="footer">
     <div>
-      <div style="font-weight:700;font-size:13px">${company?.name ?? 'Road Ready Platform'}</div>
-      <div style="color:#9CA3AF;font-size:11px">${company?.phone ?? ''}${company?.email ? ` · ${company.email}` : ''}</div>
+      <div class="footer-company">${company?.name ?? 'Road Ready Platform'}</div>
+      <div class="footer-meta">${[company?.phone, company?.email].filter(Boolean).join(' · ')}</div>
+      <div class="footer-meta" style="margin-top:2px">Report ID: <span style="font-family:monospace">${slug.slice(0, 12)}…</span></div>
     </div>
     <div style="text-align:right">
-      <div style="font-size:11px;color:#9CA3AF">Report ID</div>
-      <div style="font-family:monospace;font-size:11px;color:#6B7280">${slug.slice(0, 12)}…</div>
-      ${company?.google_review_url && !company.google_review_url.includes('your-google') ? `<div style="margin-top:6px"><a href="${company.google_review_url}" style="color:#C41230;font-size:11px;font-weight:600">Leave us a Google review →</a></div>` : ''}
+      ${company?.google_review_url && !company.google_review_url.includes('your-google')
+        ? `<a href="${company.google_review_url}" class="footer-review">⭐ Leave us a Google Review</a>`
+        : '<div class="footer-review" style="background:#1A1A1A">Road Ready ✓</div>'}
     </div>
   </div>
 
