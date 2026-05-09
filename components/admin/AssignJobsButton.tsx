@@ -1,8 +1,10 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function AssignJobsButton() {
+  const router = useRouter()
   const [state, setState] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
   const [message, setMessage] = useState('')
 
@@ -16,6 +18,7 @@ export default function AssignJobsButton() {
     } else {
       setMessage(data.assigned > 0 ? `Assigned ${data.assigned} job${data.assigned !== 1 ? 's' : ''} to technicians` : data.message)
       setState('done')
+      router.refresh()
     }
     setTimeout(() => setState('idle'), 4000)
   }
