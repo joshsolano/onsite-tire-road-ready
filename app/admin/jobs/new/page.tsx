@@ -160,7 +160,7 @@ export default function NewJobPage() {
           {showNewCustomer && (
             <div className="border border-gray-200 rounded-lg p-4 space-y-3 bg-gray-50">
               <h3 className="text-sm font-semibold">New Customer</h3>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-2 gap-3">
                 <input placeholder="First name" value={newCustomer.first_name}
                   onChange={e => setNewCustomer(p => ({...p, first_name: e.target.value}))}
                   className="input-field" />
@@ -202,7 +202,7 @@ export default function NewJobPage() {
           {showNewVehicle && (
             <div className="border border-gray-200 rounded-lg p-4 space-y-3 bg-gray-50">
               <h3 className="text-sm font-semibold">New Vehicle</h3>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-3 sm:grid-cols-3 gap-2">
                 <input placeholder="Year" value={newVehicle.year}
                   onChange={e => setNewVehicle(p => ({...p, year: e.target.value}))}
                   className="input-field" />
@@ -213,7 +213,7 @@ export default function NewJobPage() {
                   onChange={e => setNewVehicle(p => ({...p, model: e.target.value}))}
                   className="input-field" />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-2 gap-3">
                 <input placeholder="Color" value={newVehicle.color}
                   onChange={e => setNewVehicle(p => ({...p, color: e.target.value}))}
                   className="input-field" />
@@ -235,7 +235,7 @@ export default function NewJobPage() {
         {/* Job Details */}
         <div className="card p-5 space-y-4">
           <h2 className="font-semibold text-gray-900">Job Details</h2>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Service Type</label>
               <select value={form.service_type} onChange={e => set('service_type', e.target.value)} className="input-field">
@@ -256,7 +256,7 @@ export default function NewJobPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Assign Technician</label>
               <select value={form.assigned_tech_id} onChange={e => set('assigned_tech_id', e.target.value)} className="input-field">
@@ -271,7 +271,7 @@ export default function NewJobPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Service City</label>
               <input value={form.service_city} onChange={e => set('service_city', e.target.value)}

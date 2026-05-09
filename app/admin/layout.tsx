@@ -63,7 +63,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       </header>
 
       {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 safe-area-inset-bottom">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <div className="flex">
           {[
             { href: '/admin', label: 'Dashboard', icon: '⊞' },
@@ -71,15 +72,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             { href: '/admin/customers', label: 'Customers', icon: '👤' },
           ].map(({ href, label, icon }) => (
             <Link key={href} href={href}
-              className="flex-1 flex flex-col items-center py-2 text-gray-500 hover:text-red-600 text-xs gap-1">
-              <span className="text-lg">{icon}</span>
+              className="flex-1 flex flex-col items-center py-3 text-gray-500 hover:text-red-600 text-xs gap-1 active:bg-gray-50">
+              <span className="text-xl">{icon}</span>
               {label}
             </Link>
           ))}
         </div>
       </nav>
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6 pb-20 md:pb-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6 pb-24 md:pb-6">
         {children}
       </main>
     </div>

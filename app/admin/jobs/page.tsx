@@ -30,7 +30,51 @@ export default async function AdminJobsPage() {
         <Link href="/admin/jobs/new" className="btn-primary">+ New Job</Link>
       </div>
 
-      <div className="card overflow-x-auto">
+      {/* Mobile card list */}
+      <div className="md:hidden space-y-3">
+        {!jobs?.length && (
+          <div className="card p-8 text-center text-gray-400 text-sm">
+            No jobs yet. <Link href="/admin/jobs/new" className="text-red-600">Create one</Link>
+          </div>
+        )}
+        {jobs?.map(job => {
+          const c = job.customer as unknown as { first_name: string; last_name: string; phone: string } | null
+          const v = job.vehicle as unknown as { year: string; make: string; model: string } | null
+          const t = job.assigned_tech as unknown as { first_name: string; last_name: string } | null
+          const r = job.report as unknown as { public_slug: string; view_count: number; sent_at: string } | null
+          return (
+            <Link key={job.id} href={`/admin/jobs/${job.id}`} className="card p-4 flex items-start justify-between gap-3 active:bg-gray-50">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <span className="font-semibold text-gray-900 text-sm">
+                    {c ? `${c.first_name} ${c.last_name}` : 'No customer'}
+                  </span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${JOB_STATUS_COLOR[job.status as keyof typeof JOB_STATUS_COLOR]}`}>
+                    {JOB_STATUS_LABEL[job.status as keyof typeof JOB_STATUS_LABEL]}
+                  </span>
+                </div>
+                <div className="text-xs text-gray-500 mb-1">
+                  {v ? `${v.year} ${v.make} ${v.model}` : '—'}
+                  {t ? ` · ${t.first_name} ${t.last_name}` : ''}
+                </div>
+                <div className="text-xs text-gray-400">
+                  {SERVICE_TYPE_LABEL[job.service_type as keyof typeof SERVICE_TYPE_LABEL]} · {job.tire_count} tires
+                  {job.scheduled_start ? ` · ${formatDate(job.scheduled_start, { month: 'short', day: 'numeric' })}` : ''}
+                </div>
+                {r && (
+                  <div className={`text-xs mt-1 ${r.sent_at ? 'text-green-600' : 'text-gray-400'}`}>
+                    {r.sent_at ? `✓ Report sent${r.view_count > 0 ? ` · ${r.view_count} view${r.view_count > 1 ? 's' : ''}` : ''}` : 'Report not sent'}
+                  </div>
+                )}
+              </div>
+              <span className="text-gray-300 text-lg flex-shrink-0">→</span>
+            </Link>
+          )
+        })}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden md:block card overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-100">
@@ -79,8 +123,7 @@ export default async function AdminJobsPage() {
                     )}
                   </td>
                   <td className="p-3">
-                    <Link href={`/admin/jobs/${job.id}`}
-                      className="text-red-600 hover:text-red-800 font-medium text-xs">
+                    <Link href={`/admin/jobs/${job.id}`} className="text-red-600 hover:text-red-800 font-medium text-xs">
                       View →
                     </Link>
                   </td>

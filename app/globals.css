@@ -130,3 +130,8 @@
 }
 
 @media print { .no-print { display: none !important; } body { background: white; } }
+
+/* ── Mobile ── */
+html { -webkit-text-size-adjust: 100%; }
+button, a, [role="button"] { touch-action: manipulation; }
+input, select, textarea { font-size: 16px; } /* prevents iOS zoom */
