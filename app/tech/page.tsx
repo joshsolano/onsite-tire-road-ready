@@ -10,8 +10,9 @@ export default async function TechHomePage() {
 
   const { data: profile } = await supabase.from('users').select('company_id, role').eq('id', user.id).single()
 
-  const today = new Date()
+  const today    = new Date()
   today.setHours(0, 0, 0, 0)
+  const tomorrow = new Date(today.getTime() + 86400000)
 
   // Techs see assigned jobs; admins/dispatchers see all
   let query = supabase.from('jobs')
@@ -31,10 +32,10 @@ export default async function TechHomePage() {
 
   const { data: jobs } = await query
 
-  const todayJobs      = jobs?.filter(j => j.scheduled_start && new Date(j.scheduled_start) >= today) ?? []
+  const isToday = (d: string | null) => !!d && new Date(d) >= today && new Date(d) < tomorrow
+  const todayJobs      = jobs?.filter(j => isToday(j.scheduled_start)) ?? []
   const inProgressJobs = jobs?.filter(j => j.status === 'in_progress') ?? []
-  const completedJobs  = jobs?.filter(j => ['completed','report_generated','report_sent'].includes(j.status)
-    && j.scheduled_start && new Date(j.scheduled_start) >= today) ?? []
+  const completedJobs  = jobs?.filter(j => ['completed','report_generated','report_sent'].includes(j.status) && isToday(j.scheduled_start)) ?? []
 
   return (
     <div className="space-y-5">

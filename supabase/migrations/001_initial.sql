@@ -251,7 +251,7 @@ CREATE TABLE reports (
   company_id            uuid NOT NULL REFERENCES companies(id),
   customer_id           uuid REFERENCES customers(id),
   vehicle_id            uuid REFERENCES vehicles(id),
-  public_slug           text UNIQUE NOT NULL DEFAULT encode(gen_random_bytes(12), 'base64'),
+  public_slug           text UNIQUE NOT NULL DEFAULT replace(replace(replace(encode(gen_random_bytes(12), 'base64'), '+', '-'), '/', '_'), '=', ''),
   status                report_status DEFAULT 'draft',
   tone                  report_tone DEFAULT 'friendly',
   good_call_badges      text[] DEFAULT '{}',

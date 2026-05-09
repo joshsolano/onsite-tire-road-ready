@@ -14,6 +14,7 @@ export default async function AdminDashboard() {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const todayISO = today.toISOString()
+  const tomorrowISO = new Date(today.getTime() + 86400000).toISOString()
 
   const [
     { data: todayJobs },
@@ -23,7 +24,8 @@ export default async function AdminDashboard() {
     supabase.from('jobs')
       .select('id, status, report_generated_at, report_sent_at')
       .eq('company_id', companyId)
-      .gte('scheduled_start', todayISO),
+      .gte('scheduled_start', todayISO)
+      .lt('scheduled_start', tomorrowISO),
     supabase.from('jobs')
       .select('id, status, service_type, created_at, customer:customers(first_name,last_name), vehicle:vehicles(year,make,model), assigned_tech:users!jobs_assigned_tech_id_fkey(first_name,last_name)')
       .eq('company_id', companyId)
