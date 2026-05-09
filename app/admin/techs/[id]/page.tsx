@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { JOB_STATUS_LABEL, JOB_STATUS_COLOR, SERVICE_TYPE_LABEL } from '@/lib/types'
 import { formatDate, formatTime } from '@/lib/utils'
 
@@ -13,14 +13,20 @@ export default async function TechProfilePage({ params }: { params: Promise<{ id
   const { data: profile } = await supabase.from('users').select('company_id').eq('id', user.id).single()
   if (!profile) return null
 
-  const { data: tech } = await supabase
-    .from('users')
-    .select('id, first_name, last_name, phone, email, role, is_active, created_at')
-    .eq('id', id)
-    .eq('company_id', profile.company_id)
-    .single()
+  const [techResult, authResult] = await Promise.all([
+    supabase
+      .from('users')
+      .select('id, first_name, last_name, phone, email, role, is_active, created_at')
+      .eq('id', id)
+      .eq('company_id', profile.company_id)
+      .single(),
+    createServiceClient().then(s => s.auth.admin.getUserById(id)),
+  ])
 
+  const tech = techResult.data
   if (!tech) notFound()
+
+  const lastSignIn = authResult.data?.user?.last_sign_in_at ?? null
 
   const { data: jobs } = await supabase
     .from('jobs')
@@ -92,6 +98,13 @@ export default async function TechProfilePage({ params }: { params: Promise<{ id
               {tech.phone && <span>📞 {tech.phone}</span>}
               {tech.email && <span>✉ {tech.email}</span>}
               <span>📅 Member since {memberSince}</span>
+              {lastSignIn && (
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
+                  Last login {formatDate(lastSignIn, { month: 'short', day: 'numeric', year: 'numeric' })}
+                  {' '}at {formatTime(lastSignIn)}
+                </span>
+              )}
             </div>
           </div>
         </div>

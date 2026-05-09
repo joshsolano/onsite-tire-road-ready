@@ -22,11 +22,11 @@ export const metadata: Metadata = {
 }
 
 // Script runs before paint to prevent flash of wrong theme
+// Only apply dark if explicitly saved — default is always light
 const themeScript = `
 (function() {
   try {
-    var t = localStorage.getItem('theme');
-    if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    if (localStorage.getItem('theme') === 'dark') {
       document.documentElement.classList.add('dark');
     }
   } catch(e) {}

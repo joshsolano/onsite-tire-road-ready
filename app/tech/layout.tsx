@@ -29,15 +29,15 @@ export default async function TechLayout({ children }: { children: React.ReactNo
               <div className="w-2 h-2 rounded-full bg-white" style={{ marginTop: '-2px' }} />
             </div>
             <div>
-              <div className="text-white font-black text-sm tracking-tight leading-none">Road Ready</div>
-              <div className="text-gray-500 text-xs font-semibold tracking-widest uppercase leading-none mt-0.5">Tech View</div>
+              <div className="font-black text-sm tracking-tight leading-none" style={{ color: '#ffffff' }}>Road Ready</div>
+              <div className="text-xs font-semibold tracking-widest uppercase leading-none mt-0.5" style={{ color: 'rgba(255,255,255,0.38)' }}>Tech View</div>
             </div>
           </Link>
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <span className="text-gray-400 text-sm">{profile.first_name}</span>
+            <span className="text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>{profile.first_name}</span>
             <form action="/api/auth/signout" method="POST">
-              <button className="text-gray-500 hover:text-white text-sm transition-colors">Sign out</button>
+              <button className="text-sm transition-colors hover:bg-white/10 px-2 py-1 rounded" style={{ color: 'rgba(255,255,255,0.5)' }}>Sign out</button>
             </form>
           </div>
         </div>

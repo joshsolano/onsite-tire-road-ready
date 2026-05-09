@@ -34,8 +34,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <div className="w-2.5 h-2.5 rounded-full bg-white" style={{ marginTop: '-3px' }} />
             </div>
             <div className="min-w-0">
-              <div className="text-white font-black text-sm tracking-tight leading-none">{company?.name ?? 'Onsite Tire Co'}</div>
-              <div className="text-gray-500 text-xs font-semibold tracking-widest uppercase leading-none mt-0.5">Road Ready</div>
+              <div className="font-black text-sm tracking-tight leading-none" style={{ color: '#ffffff' }}>{company?.name ?? 'Onsite Tire Co'}</div>
+              <div className="text-xs font-semibold tracking-widest uppercase leading-none mt-0.5" style={{ color: 'rgba(255,255,255,0.38)' }}>Road Ready</div>
             </div>
           </Link>
 
@@ -48,8 +48,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               { href: '/admin/techs',     label: 'Team'       },
             ].map(({ href, label }) => (
               <Link key={href} href={href}
-                className="px-3 py-1.5 text-sm text-gray-400 hover:text-white rounded-md transition-colors"
-                style={{ ':hover': { background: 'rgba(255,255,255,0.08)' } } as React.CSSProperties}>
+                className="px-3 py-1.5 text-sm rounded-md transition-colors hover:bg-white/10"
+                style={{ color: 'rgba(255,255,255,0.62)' }}
+                onMouseEnter={e => (e.currentTarget.style.color = '#ffffff')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.62)')}>
                 {label}
               </Link>
             ))}
@@ -57,11 +59,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <span className="text-gray-500 text-sm hidden md:block">
+            <span className="text-sm hidden md:block" style={{ color: 'rgba(255,255,255,0.5)' }}>
               {profile.first_name} {profile.last_name}
             </span>
             <form action="/api/auth/signout" method="POST">
-              <button className="text-gray-500 hover:text-white text-sm transition-colors px-2 py-1 rounded">
+              <button className="text-sm transition-colors px-2 py-1 rounded hover:bg-white/10" style={{ color: 'rgba(255,255,255,0.5)' }}>
                 Sign out
               </button>
             </form>
