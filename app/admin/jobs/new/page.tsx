@@ -91,10 +91,12 @@ export default function NewJobPage() {
     const { data: { user } } = await supabase.auth.getUser()
     const payload = {
       ...form,
-      company_id: companyId,
-      created_by: user?.id,
-      scheduled_start: form.scheduled_start ? new Date(form.scheduled_start).toISOString() : null,
-      tire_count: Number(form.tire_count),
+      company_id:       companyId,
+      created_by:       user?.id,
+      vehicle_id:       form.vehicle_id       || null,
+      assigned_tech_id: form.assigned_tech_id || null,
+      scheduled_start:  form.scheduled_start ? new Date(form.scheduled_start).toISOString() : null,
+      tire_count:       Number(form.tire_count),
     }
 
     const { data: job, error: jobError } = await supabase
