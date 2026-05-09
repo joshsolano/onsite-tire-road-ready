@@ -349,37 +349,92 @@ export default async function PublicReportPage({ params }: Props) {
         </Section>
 
         {/* ── TIME SAVED ──────────────────────────────────────────────────── */}
-        {timeSavedHours && (
-          <Section title="Time Saved Today">
-            <div className="text-center p-5 rounded-xl mb-4" style={{ background: '#0A0A0A' }}>
-              <div className="text-4xl font-bold text-white mb-1">{timeSavedHours}<span className="text-2xl"> hrs</span></div>
-              <div className="text-gray-400 text-sm">saved by choosing mobile tire service</div>
+        {timeSaved && (
+          <Section title="Time Saved vs. a Tire Shop">
+
+            {/* Hero */}
+            <div className="rounded-2xl p-5 mb-4 text-center" style={{ background: '#0A0A0A' }}>
+              <div className="text-xs uppercase tracking-widest text-gray-500 mb-2">You got back</div>
+              <div className="text-5xl font-bold text-white mb-1">
+                {timeSaved >= 60
+                  ? <>{Math.floor(timeSaved / 60)}<span className="text-3xl font-semibold">h </span>{timeSaved % 60 > 0 ? <>{timeSaved % 60}<span className="text-3xl font-semibold">m</span></> : null}</>
+                  : <>{timeSaved}<span className="text-3xl font-semibold">m</span></>
+                }
+              </div>
+              <div className="text-gray-400 text-sm">of your day — for free</div>
             </div>
-            <div className="space-y-2">
-              {[
-                { label: 'Drive to tire shop avoided',    min: 25 },
-                { label: 'Wait at the shop avoided',       min: 60 },
-                { label: 'Check-in and checkout avoided',  min: 15 },
-                { label: 'Return trip avoided',            min: 25 },
-                { label: 'Workday interruption avoided',   min: 30 },
-              ].map(({ label, min }) => (
-                <div key={label} className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <span className="text-green-500">✓</span> {label}
+
+            {/* Side-by-side comparison */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              {/* Traditional shop column */}
+              <div className="rounded-xl p-4 border-2 border-red-100 bg-red-50">
+                <div className="text-xs font-bold uppercase tracking-wide text-red-400 mb-3">Traditional Shop</div>
+                <div className="space-y-2.5">
+                  {[
+                    { step: 'Drive there',      min: 25 },
+                    { step: 'Check in',         min: 15 },
+                    { step: 'Wait for service', min: 75 },
+                    { step: 'Drive back',       min: 25 },
+                  ].map(({ step, min }) => (
+                    <div key={step} className="flex items-center justify-between">
+                      <span className="text-xs text-red-700">{step}</span>
+                      <span className="text-xs font-semibold text-red-600 bg-red-100 px-1.5 py-0.5 rounded">~{min}m</span>
+                    </div>
+                  ))}
+                  <div className="pt-2 mt-1 border-t border-red-200 flex items-center justify-between">
+                    <span className="text-xs font-bold text-red-800">Total</span>
+                    <span className="text-sm font-bold text-red-700">~{Math.round((25+15+75+25)/60 * 10) / 10}hrs</span>
                   </div>
-                  <span className="text-gray-400 text-xs">~{min} min</span>
                 </div>
-              ))}
+              </div>
+
+              {/* Mobile service column */}
+              <div className="rounded-xl p-4 border-2 border-green-200 bg-green-50">
+                <div className="text-xs font-bold uppercase tracking-wide text-green-600 mb-3">Road Ready Mobile</div>
+                <div className="space-y-2.5">
+                  {[
+                    { step: 'Drive there',      val: 'None' },
+                    { step: 'Check in',         val: 'None' },
+                    { step: 'Wait for service', val: 'At home' },
+                    { step: 'Drive back',       val: 'None' },
+                  ].map(({ step, val }) => (
+                    <div key={step} className="flex items-center justify-between">
+                      <span className="text-xs text-green-700">{step}</span>
+                      <span className="text-xs font-semibold text-green-600 bg-green-100 px-1.5 py-0.5 rounded">✓ {val}</span>
+                    </div>
+                  ))}
+                  <div className="pt-2 mt-1 border-t border-green-200 flex items-center justify-between">
+                    <span className="text-xs font-bold text-green-800">Total</span>
+                    <span className="text-sm font-bold text-green-700">Done at your door</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="mt-3 grid grid-cols-2 gap-3 text-center">
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <div className="font-bold text-gray-900">2</div>
-                <div className="text-xs text-gray-500">Trips avoided</div>
+
+            {/* Visual bar comparison */}
+            <div className="space-y-2 mb-4">
+              <div>
+                <div className="flex justify-between text-xs text-gray-500 mb-1">
+                  <span>Traditional shop visit</span>
+                  <span>~{Math.round((25+15+75+25)/60 * 10) / 10} hrs</span>
+                </div>
+                <div className="h-3 bg-red-100 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full bg-red-400" style={{ width: '100%' }} />
+                </div>
               </div>
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <div className="font-bold text-gray-900">1</div>
-                <div className="text-xs text-gray-500">Waiting rooms avoided</div>
+              <div>
+                <div className="flex justify-between text-xs text-gray-500 mb-1">
+                  <span>Mobile service (what you paid for)</span>
+                  <span>~{timeSaved < 60 ? `${timeSaved}m` : `${(timeSaved / 60).toFixed(1)}h`} saved</span>
+                </div>
+                <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full" style={{ width: '8%', background: '#22C55E' }} />
+                </div>
               </div>
+            </div>
+
+            <div className="text-center p-3 rounded-xl text-sm font-medium" style={{ background: '#0A0A0A', color: 'white' }}>
+              No drive. No waiting room. No wasted afternoon. ✓
             </div>
           </Section>
         )}
