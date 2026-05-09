@@ -47,11 +47,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               { href: '/admin/customers', label: 'Customers'  },
               { href: '/admin/techs',     label: 'Team'       },
             ].map(({ href, label }) => (
-              <Link key={href} href={href}
-                className="px-3 py-1.5 text-sm rounded-md transition-colors hover:bg-white/10"
-                style={{ color: 'rgba(255,255,255,0.62)' }}
-                onMouseEnter={e => (e.currentTarget.style.color = '#ffffff')}
-                onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.62)')}>
+              <Link key={href} href={href} className="ot-nav-link">
                 {label}
               </Link>
             ))}
