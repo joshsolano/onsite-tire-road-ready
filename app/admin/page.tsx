@@ -111,23 +111,26 @@ export default async function AdminDashboard() {
 
         {/* Technicians */}
         <div className="card">
-          <div className="p-4 border-b border-gray-100">
+          <div className="p-4 border-b border-gray-100 flex items-center justify-between">
             <h2 className="font-semibold text-gray-900">Technicians</h2>
+            <Link href="/admin/techs" className="text-sm text-red-600 font-medium">View all →</Link>
           </div>
           <div className="divide-y divide-gray-50">
             {!techs?.length && (
               <div className="p-6 text-center text-gray-400 text-sm">No technicians added yet.</div>
             )}
             {techs?.map(t => (
-              <div key={t.id} className="flex items-center gap-3 p-4">
-                <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-700 text-xs font-bold">
+              <Link key={t.id} href={`/admin/techs/${t.id}`}
+                className="flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                   {t.first_name[0]}{t.last_name[0]}
                 </div>
-                <div>
+                <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-gray-900">{t.first_name} {t.last_name}</div>
                   <div className="text-xs text-gray-500 capitalize">{t.role}</div>
                 </div>
-              </div>
+                <div className="text-gray-300 text-sm">→</div>
+              </Link>
             ))}
           </div>
         </div>

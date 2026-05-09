@@ -41,6 +41,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               { href: '/admin', label: 'Dashboard' },
               { href: '/admin/jobs', label: 'Jobs' },
               { href: '/admin/customers', label: 'Customers' },
+              { href: '/admin/techs', label: 'Team' },
             ].map(({ href, label }) => (
               <Link key={href} href={href}
                 className="px-3 py-1.5 text-sm text-gray-400 hover:text-white hover:bg-white/10 rounded-md transition-colors">
@@ -70,6 +71,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             { href: '/admin', label: 'Dashboard', icon: '⊞' },
             { href: '/admin/jobs', label: 'Jobs', icon: '🔧' },
             { href: '/admin/customers', label: 'Customers', icon: '👤' },
+            { href: '/admin/techs', label: 'Team', icon: '👥' },
           ].map(({ href, label, icon }) => (
             <Link key={href} href={href}
               className="flex-1 flex flex-col items-center py-3 text-gray-500 hover:text-red-600 text-xs gap-1 active:bg-gray-50">
