@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { formatDate } from '@/lib/utils'
 import { JOB_STATUS_LABEL, JOB_STATUS_COLOR } from '@/lib/types'
+import AssignJobsButton from '@/components/admin/AssignJobsButton'
 
 export default async function AdminDashboard() {
   const supabase = await createClient()
@@ -52,14 +53,17 @@ export default async function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-500 text-sm mt-0.5">{formatDate(new Date().toISOString())}</p>
         </div>
-        <Link href="/admin/jobs/new" className="btn-primary">
-          + New Job
-        </Link>
+        <div className="flex items-center gap-3 flex-wrap">
+          <AssignJobsButton />
+          <Link href="/admin/jobs/new" className="btn-primary">
+            + New Job
+          </Link>
+        </div>
       </div>
 
       {/* Stats */}

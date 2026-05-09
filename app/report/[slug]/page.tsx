@@ -85,7 +85,7 @@ export default async function PublicReportPage({ params }: Props) {
         <div className="max-w-2xl mx-auto px-4 pt-8 pb-6">
           <div className="flex items-center justify-between mb-6">
             {/* Logo */}
-            <div className="flex items-center gap-2">
+            <Link href="/admin" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
               <svg viewBox="0 0 32 32" fill="none" className="w-8 h-8 flex-shrink-0">
                 <circle cx="16" cy="16" r="14" stroke="#444" strokeWidth="1.5"/>
                 <circle cx="16" cy="16" r="9" stroke="#555" strokeWidth="1.5"/>
@@ -96,7 +96,7 @@ export default async function PublicReportPage({ params }: Props) {
                 <div className="font-bold text-sm leading-none">{company?.name ?? 'Road Ready'}</div>
                 <div className="text-gray-400 text-xs">Mobile Tire Service</div>
               </div>
-            </div>
+            </Link>
             <div className="flex items-center gap-1.5 bg-green-800 rounded-full px-3 py-1">
               <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
               <span className="text-green-200 text-xs font-medium">Road Ready</span>
