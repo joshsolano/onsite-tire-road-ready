@@ -48,8 +48,9 @@ export default async function PublicReportPage({ params }: Props) {
   const company  = report.company as { name: string; logo_url: string; phone: string; google_review_url: string; primary_color: string } | null
   const customer = job?.customer as { first_name: string; last_name: string } | null
   const vehicle  = job?.vehicle  as { year: string; make: string; model: string; color: string; vin: string } | null
-  const tech     = job?.assigned_tech as { first_name: string; last_name: string } | null
-  const tires    = (job?.tire_records as Array<Record<string, unknown>>) ?? []
+  const tech       = job?.assigned_tech as { first_name: string; last_name: string } | null
+  const techId     = job?.assigned_tech_id as string | null
+  const tires      = (job?.tire_records as Array<Record<string, unknown>>) ?? []
   const allPhotos = (job?.photos as Array<Record<string, unknown>>) ?? []
   const checks   = (job?.checklist_items as Array<Record<string, unknown>>) ?? []
 
@@ -58,6 +59,17 @@ export default async function PublicReportPage({ params }: Props) {
   const badges      = (report.good_call_badges as string[]) ?? []
   const facts       = (report.tire_facts as string[]) ?? []
   const nextDate    = report.next_service_date as string | null
+
+  // Tech lifetime stats (service client bypasses RLS on public report page)
+  let techTotalTires = 0
+  if (techId) {
+    const { data: techJobs } = await supabase
+      .from('jobs')
+      .select('tire_count')
+      .eq('assigned_tech_id', techId)
+      .in('status', ['completed', 'report_generated', 'report_sent'])
+    techTotalTires = (techJobs ?? []).reduce((sum, j) => sum + (j.tire_count ?? 0), 0)
+  }
 
   const serviceDate = job?.completed_at ? formatDate(String(job.completed_at)) : formatDate(String(report.created_at))
   const location    = [job?.service_city, job?.service_state].filter(Boolean).join(', ')
@@ -165,21 +177,36 @@ export default async function PublicReportPage({ params }: Props) {
                 </div>
               </div>
 
-              {/* Credential badges */}
-              <div className="grid grid-cols-2 gap-2">
+              {/* Credential badges — all green */}
+              <div className="grid grid-cols-2 gap-2 mb-4">
                 {[
-                  { icon: '✓', label: 'Background Checked',     color: '#166534', bg: '#F0FDF4', border: '#86EFAC' },
-                  { icon: '✓', label: 'Drug Tested',            color: '#1D4ED8', bg: '#EFF6FF', border: '#BFDBFE' },
-                  { icon: '✓', label: 'Certified Technician',   color: '#92400E', bg: '#FFFBEB', border: '#FDE68A' },
-                  { icon: '✓', label: 'Fully Insured',          color: '#6B21A8', bg: '#FAF5FF', border: '#E9D5FF' },
-                ].map(({ icon, label, color, bg, border }) => (
-                  <div key={label} className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold"
-                    style={{ background: bg, border: `1px solid ${border}`, color }}>
-                    <span className="font-black">{icon}</span>
+                  'Background Checked',
+                  'Drug Tested',
+                  'Certified Technician',
+                  'Fully Insured',
+                ].map(label => (
+                  <div key={label} className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold"
+                    style={{ background: '#F0FDF4', border: '1px solid #86EFAC', color: '#166534' }}>
+                    <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4 flex-shrink-0">
+                      <circle cx="8" cy="8" r="7" fill="#22C55E"/>
+                      <path d="M5 8l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                     {label}
                   </div>
                 ))}
               </div>
+
+              {/* Tires completed stat */}
+              {techTotalTires > 0 && (
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl"
+                  style={{ background: '#0A0A0A' }}>
+                  <div className="text-2xl font-black text-white">{techTotalTires.toLocaleString()}</div>
+                  <div className="text-sm text-gray-400 leading-snug">
+                    tires installed by {tech.first_name}<br/>
+                    <span className="text-gray-500 text-xs">and counting</span>
+                  </div>
+                </div>
+              )}
 
               <p className="text-xs text-gray-400 mt-4 leading-relaxed">
                 Every {company?.name ?? 'Road Ready'} technician is vetted, trained, and certified before arriving at your door. Your safety is our standard.
