@@ -146,6 +146,48 @@ export default async function PublicReportPage({ params }: Props) {
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
 
+        {/* ── YOUR TECHNICIAN ──────────────────────────────────────────────── */}
+        {tech && (
+          <div className="card overflow-hidden">
+            {/* Top strip */}
+            <div className="h-1.5" style={{ background: 'linear-gradient(90deg, #C41230, #9f0d25)' }} />
+            <div className="p-5">
+              <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Your Technician</p>
+              <div className="flex items-center gap-4 mb-5">
+                {/* Avatar */}
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white text-lg font-black flex-shrink-0"
+                  style={{ background: 'linear-gradient(135deg, #C41230, #78091c)' }}>
+                  {tech.first_name[0]}{tech.last_name[0]}
+                </div>
+                <div>
+                  <div className="text-lg font-black text-gray-900">{tech.first_name} {tech.last_name}</div>
+                  <div className="text-sm text-gray-500 mt-0.5">Mobile Tire Technician · {company?.name ?? 'Road Ready'}</div>
+                </div>
+              </div>
+
+              {/* Credential badges */}
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { icon: '✓', label: 'Background Checked',     color: '#166534', bg: '#F0FDF4', border: '#86EFAC' },
+                  { icon: '✓', label: 'Drug Tested',            color: '#1D4ED8', bg: '#EFF6FF', border: '#BFDBFE' },
+                  { icon: '✓', label: 'Certified Technician',   color: '#92400E', bg: '#FFFBEB', border: '#FDE68A' },
+                  { icon: '✓', label: 'Fully Insured',          color: '#6B21A8', bg: '#FAF5FF', border: '#E9D5FF' },
+                ].map(({ icon, label, color, bg, border }) => (
+                  <div key={label} className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold"
+                    style={{ background: bg, border: `1px solid ${border}`, color }}>
+                    <span className="font-black">{icon}</span>
+                    {label}
+                  </div>
+                ))}
+              </div>
+
+              <p className="text-xs text-gray-400 mt-4 leading-relaxed">
+                Every {company?.name ?? 'Road Ready'} technician is vetted, trained, and certified before arriving at your door. Your safety is our standard.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* ── GOOD CALL SUMMARY ────────────────────────────────────────────── */}
         {badges.length > 0 && (
           <Section title="Good Call Getting This Done">
