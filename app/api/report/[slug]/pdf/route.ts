@@ -292,7 +292,7 @@ export async function GET(
   return new NextResponse(html, {
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
-      'Content-Disposition': `inline; filename="road-ready-report-${slug.slice(0,8)}.html"`,
+      'Content-Disposition': `attachment; filename="road-ready-report-${slug.slice(0,8)}.html"`,
     },
   })
 }

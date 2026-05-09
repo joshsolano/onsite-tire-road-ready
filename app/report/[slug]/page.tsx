@@ -539,10 +539,10 @@ export default async function PublicReportPage({ params }: Props) {
 
         {/* PDF download */}
         <div className="text-center pb-6">
-          <Link href={`/report/${slug}/pdf`} target="_blank"
+          <a href={`/report/${slug}/pdf`} download
             className="text-gray-400 text-sm hover:text-gray-700 underline">
             Download PDF
-          </Link>
+          </a>
         </div>
 
       </div>
